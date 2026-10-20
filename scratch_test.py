@@ -4,53 +4,46 @@ import urllib.request
 import urllib.error
 
 def main():
-    ff_url = "https://fuckingfast.co/mkx39mgx8koc#PRAGMATA_Cracked_--_fitgirl-repacks.site_--_.part01.rar"
-    file_id = "mkx39mgx8koc"
-    post_url = "https://fuckingfast.co/f/" + file_id + "/go"
+    test_urls = [
+        "https://fuckingfast.co/mkx39mgx8koc#PRAGMATA_Cracked_--_fitgirl-repacks.site_--_.part01.rar",
+        "https://fuckingfast.co/akb08wunesaf#Ready_or_Not_--_fitgirl-repacks.site_--_.part01.rar"
+    ]
 
-    headers_common = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-    }
+    for ff_url in test_urls:
+        m = re.search(r'fuckingfast\.co/(?:f/)?([a-zA-Z0-9]+)', ff_url)
+        if not m:
+            print("ERROR: Could not extract file ID from URL:", ff_url)
+            continue
 
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor())
-    urllib.request.install_opener(opener)
+        file_id = m.group(1)
+        post_url = f"https://fuckingfast.co/f/{file_id}/go"
 
-    try:
-        req = urllib.request.Request(ff_url, headers=headers_common)
-        with opener.open(req, timeout=15) as resp:
-            pass
-    except Exception as e:
-        print("WARNING GET: " + str(e))
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+            "Accept": "*/*",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "HX-Request": "true",
+            "HX-Current-URL": f"https://fuckingfast.co/{file_id}",
+            "Origin": "https://fuckingfast.co",
+            "Referer": f"https://fuckingfast.co/{file_id}",
+        }
 
-    post_headers = {
-        **headers_common,
-        "Accept": "*/*",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "HX-Request": "true",
-        "HX-Current-URL": ff_url,
-        "HX-Target": "body",
-        "Origin": "https://fuckingfast.co",
-        "Referer": ff_url,
-    }
-
-    try:
-        req = urllib.request.Request(post_url, data=b"", headers=post_headers, method="POST")
-        with opener.open(req, timeout=15) as resp:
-            hx_redirect = resp.headers.get("hx-redirect") or resp.headers.get("HX-Redirect")
+        try:
+            req = urllib.request.Request(post_url, data=b"", headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                hx_redirect = resp.headers.get("hx-redirect") or resp.headers.get("HX-Redirect")
+                if hx_redirect:
+                    print("SUCCESS:", file_id, "->", hx_redirect.strip()[:60] + "...")
+                else:
+                    print("ERROR: No hx-redirect header found for", file_id)
+        except urllib.error.HTTPError as e:
+            hx_redirect = e.headers.get("hx-redirect") or e.headers.get("HX-Redirect")
             if hx_redirect:
-                print("SUCCESS: " + hx_redirect.strip())
+                print("SUCCESS (from error headers):", file_id, "->", hx_redirect.strip()[:60] + "...")
             else:
-                print("ERROR: No hx-redirect header found.")
-    except urllib.error.HTTPError as e:
-        hx_redirect = e.headers.get("hx-redirect") or e.headers.get("HX-Redirect")
-        if hx_redirect:
-            print("SUCCESS (from error): " + hx_redirect.strip())
-        else:
-            print("ERROR: HTTP " + str(e.code) + " from POST /go")
-    except Exception as e:
-        print("ERROR POST: " + str(e))
+                print(f"ERROR: HTTP {e.code} for {file_id}")
+        except Exception as e:
+            print(f"ERROR: {e} for {file_id}")
 
 if __name__ == "__main__":
     main()

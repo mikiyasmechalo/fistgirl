@@ -104,7 +104,7 @@ var msParser = (function()
             console.log("FDM msParser: extractFuckingFastDirectLink called with: " + fuckingFastUrl);
 
             return new Promise(function (resolve, reject) {
-                launchPythonScript(requestId, interactive, "get_ff_link.py", [fuckingFastUrl])
+                launchPythonScript(requestId || 0, interactive || false, "get_ff_link.py", [fuckingFastUrl])
                     .then(function(result) {
                         if (result.exitCode === 0 && result.output) {
                             var directLink = result.output.trim();
